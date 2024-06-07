@@ -92,3 +92,37 @@ resource "aws_route" "public-internet-route" {
   destination_cidr_block    = "0.0.0.0/0"
   gateway_id                = aws_internet_gateway.prod-igw.id
 }
+
+#EIP for nat gateway
+resource "aws_eip" "nat_eip" {
+  depends_on = [aws_internet_gateway.prod-igw]
+  tags = {
+    name = "Nat gateway EIP"
+  }
+
+}
+
+#nat gateway 
+resource "aws_nat_gateway" "Prod-Nat-Gateway" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.prod-pub-sub2.id
+
+  tags = {
+    Name = "Prod-Nat-Gateway"
+  }
+
+}
+
+#route table for nat gateway 
+resource "aws_route_table" "Nat-private" {
+  vpc_id = aws_vpc.genius-vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.prod-igw.id
+  }
+
+  tags = {
+    Name = "private-route-forNat"
+  }
+}
